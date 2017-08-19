@@ -14,6 +14,7 @@ export default class InfiniteScroll extends Component {
     isReverse: PropTypes.bool,
     loader: PropTypes.object,
     loadMore: PropTypes.func.isRequired,
+    loadBefore: PropTypes.func.isRequired,
     pageStart: PropTypes.number,
     ref: PropTypes.func,
     threshold: PropTypes.number,
@@ -91,6 +92,7 @@ export default class InfiniteScroll extends Component {
     const scrollEl = window;
 
     let offset;
+    let offsetTop;
     if (this.props.useWindow) {
       const scrollTop = (scrollEl.pageYOffset !== undefined) ?
        scrollEl.pageYOffset :
@@ -103,6 +105,7 @@ export default class InfiniteScroll extends Component {
                      scrollTop -
                      window.innerHeight);
       }
+      offsetTop = scrollTop;
     } else if (this.props.isReverse) {
       offset = el.parentNode.scrollTop;
     } else {
@@ -114,6 +117,18 @@ export default class InfiniteScroll extends Component {
       // Call loadMore after detachScrollListener to allow for non-async loadMore functions
       if (typeof this.props.loadMore === 'function') {
         this.props.loadMore(this.pageLoaded += 1);
+      }
+    }
+    else if (offsetTop < Number(this.props.threshold)) {
+      console.log('offset top detected');
+      if (this.pageLoaded > 1) {
+        console.log('page loaded is > 1');
+        this.detachScrollListener();
+        // Call loadBefore after detachScrollListener to allow for non-async loadBefore functions
+        if (typeof this.props.loadBefore === 'function') {
+          console.log('load before is function');
+          this.props.loadBefore(this.pageLoaded -= 1);
+        }
       }
     }
   }
@@ -134,6 +149,7 @@ export default class InfiniteScroll extends Component {
       isReverse,
       loader,
       loadMore,
+      loadBefore,
       pageStart,
       ref,
       threshold,

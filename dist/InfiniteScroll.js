@@ -97,6 +97,7 @@ var InfiniteScroll = function (_Component) {
       var scrollEl = window;
 
       var offset = void 0;
+      var offsetTop = void 0;
       if (this.props.useWindow) {
         var scrollTop = scrollEl.pageYOffset !== undefined ? scrollEl.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
         if (this.props.isReverse) {
@@ -104,6 +105,7 @@ var InfiniteScroll = function (_Component) {
         } else {
           offset = this.calculateTopPosition(el) + (el.offsetHeight - scrollTop - window.innerHeight);
         }
+        offsetTop = scrollTop;
       } else if (this.props.isReverse) {
         offset = el.parentNode.scrollTop;
       } else {
@@ -115,6 +117,17 @@ var InfiniteScroll = function (_Component) {
         // Call loadMore after detachScrollListener to allow for non-async loadMore functions
         if (typeof this.props.loadMore === 'function') {
           this.props.loadMore(this.pageLoaded += 1);
+        }
+      } else if (offsetTop < Number(this.props.threshold)) {
+        console.log('offset top detected');
+        if (this.pageLoaded > 1) {
+          console.log('page loaded is > 1');
+          this.detachScrollListener();
+          // Call loadBefore after detachScrollListener to allow for non-async loadBefore functions
+          if (typeof this.props.loadBefore === 'function') {
+            console.log('load before is function');
+            this.props.loadBefore(this.pageLoaded -= 1);
+          }
         }
       }
     }
@@ -139,12 +152,13 @@ var InfiniteScroll = function (_Component) {
           isReverse = _props.isReverse,
           loader = _props.loader,
           loadMore = _props.loadMore,
+          loadBefore = _props.loadBefore,
           pageStart = _props.pageStart,
           ref = _props.ref,
           threshold = _props.threshold,
           useCapture = _props.useCapture,
           useWindow = _props.useWindow,
-          props = _objectWithoutProperties(_props, ['children', 'element', 'hasMore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'pageStart', 'ref', 'threshold', 'useCapture', 'useWindow']);
+          props = _objectWithoutProperties(_props, ['children', 'element', 'hasMore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'loadBefore', 'pageStart', 'ref', 'threshold', 'useCapture', 'useWindow']);
 
       props.ref = function (node) {
         _this2.scrollComponent = node;
@@ -176,6 +190,7 @@ InfiniteScroll.propTypes = {
   isReverse: _propTypes2.default.bool,
   loader: _propTypes2.default.object,
   loadMore: _propTypes2.default.func.isRequired,
+  loadBefore: _propTypes2.default.func.isRequired,
   pageStart: _propTypes2.default.number,
   ref: _propTypes2.default.func,
   threshold: _propTypes2.default.number,
