@@ -97,18 +97,14 @@ var InfiniteScroll = function (_Component) {
     }
   }, {
     key: 'afterLoad',
-    value: function afterLoad(offsetTop) {
+    value: function afterLoad(isScrollTop) {
       if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
         this.onePageHeight = this.scrollComponent.offsetHeight;
       }
-      // if (offsetTop !== undefined) {
-      //   if (window.pageYOffset !== undefined) {
-      //     window.pageYOffset = offsetTop;
-      //   }
-      //   else {
-      //     (document.documentElement || document.body.parentNode || document.body).scrollTop = offsetTop;
-      //   }
-      // }
+      if (isScrollTop !== undefined) {
+        var scrollTop = window.pageYOffset !== undefined ? window.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
+        window.scrollTo(0, scrollTop + this.onePageHeight);
+      }
     }
   }, {
     key: 'scrollListener',
@@ -133,22 +129,17 @@ var InfiniteScroll = function (_Component) {
       }
 
       if (offset < Number(this.props.threshold)) {
-        console.log('offset bottom detected');
         this.detachScrollListener();
         // Call loadMore after detachScrollListener to allow for non-async loadMore functions
         if (typeof this.props.loadMore === 'function') {
-          console.log('page loaded', this.pageLoaded);
           this.props.loadMore(this.pageLoaded += 1, this.afterLoad.bind(this));
         }
       } else if (offsetTop < Number(this.props.threshold)) {
-        console.log('offset top detected');
         if (this.minPageLoaded > 1) {
-          console.log('page loaded is', this.minPageLoaded);
           this.detachScrollListener();
           // Call loadBefore after detachScrollListener to allow for non-async loadBefore functions
           if (typeof this.props.loadBefore === 'function') {
-            console.log('load before is function');
-            this.props.loadBefore(this.minPageLoaded -= 1, this.afterLoad.bind(this, offsetTop));
+            this.props.loadBefore(this.minPageLoaded -= 1, this.afterLoad.bind(this, true));
           }
         } else {
           this.hasMoreBefore = false;
@@ -157,11 +148,8 @@ var InfiniteScroll = function (_Component) {
 
       if (this.onePageHeight) {
         this.visiblePage = (offsetTop - this.calculateTopPosition(el)) / this.onePageHeight;
-        console.log('offsetTop', offsetTop);
-        console.log('position scroll element', this.calculateTopPosition(el));
-        console.log('one page height:', this.onePageHeight);
-        console.log('visible page:', this.visiblePage);
-        console.log('rounded: ', Math.round(this.visiblePage) + 1);
+        this.visiblePage = Math.round(this.visiblePage) + this.minPageLoaded;
+        console.log('visible page #', this.visiblePage);
       }
     }
   }, {
