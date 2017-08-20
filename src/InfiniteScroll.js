@@ -10,6 +10,7 @@ export default class InfiniteScroll extends Component {
       .isRequired,
     element: PropTypes.string,
     hasMore: PropTypes.bool,
+    hasMoreBefore: PropTypes.bool,
     initialLoad: PropTypes.bool,
     isReverse: PropTypes.bool,
     loader: PropTypes.object,
@@ -25,6 +26,7 @@ export default class InfiniteScroll extends Component {
   static defaultProps = {
     element: 'div',
     hasMore: false,
+    hasMoreBefore: false,
     initialLoad: true,
     pageStart: 0,
     ref: null,
@@ -37,12 +39,16 @@ export default class InfiniteScroll extends Component {
 
   constructor(props) {
     super(props);
-
     this.scrollListener = this.scrollListener.bind(this);
   }
 
   componentDidMount() {
-    this.pageLoaded = this.props.pageStart;
+    // page at pageStart is not yet loaded
+    this.pageLoaded = this.props.pageStart - 1;
+    // first page is loaded automatically, therefore minPageLoaded is the page number after initial pageLoaded (== pageStart)
+    this.minPageLoaded = this.props.pageStart;
+    this.onePageHeight = null;
+    this.visiblePage = null;
     this.attachScrollListener();
   }
 
@@ -70,7 +76,7 @@ export default class InfiniteScroll extends Component {
   }
 
   attachScrollListener() {
-    if (!this.props.hasMore) {
+    if (!this.props.hasMore && !this.props.hasMoreBefore) {
       return;
     }
 
@@ -87,6 +93,20 @@ export default class InfiniteScroll extends Component {
     }
   }
 
+  afterLoad(offsetTop) {
+    if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
+      this.onePageHeight = this.scrollComponent.offsetHeight;
+    }
+    // if (offsetTop !== undefined) {
+    //   if (window.pageYOffset !== undefined) {
+    //     window.pageYOffset = offsetTop;
+    //   }
+    //   else {
+    //     (document.documentElement || document.body.parentNode || document.body).scrollTop = offsetTop;
+    //   }
+    // }
+  }
+
   scrollListener() {
     const el = this.scrollComponent;
     const scrollEl = window;
@@ -95,8 +115,8 @@ export default class InfiniteScroll extends Component {
     let offsetTop;
     if (this.props.useWindow) {
       const scrollTop = (scrollEl.pageYOffset !== undefined) ?
-       scrollEl.pageYOffset :
-       (document.documentElement || document.body.parentNode || document.body).scrollTop;
+        scrollEl.pageYOffset :
+        (document.documentElement || document.body.parentNode || document.body).scrollTop;
       if (this.props.isReverse) {
         offset = scrollTop;
       } else {
@@ -113,23 +133,37 @@ export default class InfiniteScroll extends Component {
     }
 
     if (offset < Number(this.props.threshold)) {
+      console.log('offset bottom detected');
       this.detachScrollListener();
       // Call loadMore after detachScrollListener to allow for non-async loadMore functions
       if (typeof this.props.loadMore === 'function') {
-        this.props.loadMore(this.pageLoaded += 1);
+        console.log('page loaded', this.pageLoaded);
+        this.props.loadMore(this.pageLoaded += 1, this.afterLoad.bind(this));
       }
     }
     else if (offsetTop < Number(this.props.threshold)) {
       console.log('offset top detected');
-      if (this.pageLoaded > 1) {
-        console.log('page loaded is > 1');
+      if (this.minPageLoaded > 1) {
+        console.log('page loaded is', this.minPageLoaded);
         this.detachScrollListener();
         // Call loadBefore after detachScrollListener to allow for non-async loadBefore functions
         if (typeof this.props.loadBefore === 'function') {
           console.log('load before is function');
-          this.props.loadBefore(this.pageLoaded -= 1);
+          this.props.loadBefore(this.minPageLoaded -= 1, this.afterLoad.bind(this, offsetTop));
         }
       }
+      else {
+        this.hasMoreBefore = false;
+      }
+    }
+
+    if (this.onePageHeight) {
+      this.visiblePage = ( offsetTop - this.calculateTopPosition(el) ) / this.onePageHeight;
+      console.log('offsetTop', offsetTop);
+      console.log('position scroll element', this.calculateTopPosition(el));
+      console.log('one page height:', this.onePageHeight);
+      console.log('visible page:', this.visiblePage);
+      console.log('rounded: ', Math.round(this.visiblePage) + 1);
     }
   }
 
@@ -145,6 +179,7 @@ export default class InfiniteScroll extends Component {
       children,
       element,
       hasMore,
+      hasMoreBefore,
       initialLoad,
       isReverse,
       loader,
@@ -173,6 +208,14 @@ export default class InfiniteScroll extends Component {
         isReverse ?
           childrenArray.unshift(this.defaultLoader) :
           childrenArray.push(this.defaultLoader);
+      }
+    }
+    if (hasMoreBefore) {
+      if (loader) {
+        childrenArray.unshift(loader);
+      }
+      else {
+        childrenArray.unshift(this.defaultLoader);
       }
     }
     return React.createElement(

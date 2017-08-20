@@ -39,7 +39,12 @@ var InfiniteScroll = function (_Component) {
   _createClass(InfiniteScroll, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
-      this.pageLoaded = this.props.pageStart;
+      // page at pageStart is not yet loaded
+      this.pageLoaded = this.props.pageStart - 1;
+      // first page is loaded automatically, therefore minPageLoaded is the page number after initial pageLoaded (== pageStart)
+      this.minPageLoaded = this.props.pageStart;
+      this.onePageHeight = null;
+      this.visiblePage = null;
       this.attachScrollListener();
     }
   }, {
@@ -74,7 +79,7 @@ var InfiniteScroll = function (_Component) {
   }, {
     key: 'attachScrollListener',
     value: function attachScrollListener() {
-      if (!this.props.hasMore) {
+      if (!this.props.hasMore && !this.props.hasMoreBefore) {
         return;
       }
 
@@ -89,6 +94,21 @@ var InfiniteScroll = function (_Component) {
       if (this.props.initialLoad) {
         this.scrollListener();
       }
+    }
+  }, {
+    key: 'afterLoad',
+    value: function afterLoad(offsetTop) {
+      if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
+        this.onePageHeight = this.scrollComponent.offsetHeight;
+      }
+      // if (offsetTop !== undefined) {
+      //   if (window.pageYOffset !== undefined) {
+      //     window.pageYOffset = offsetTop;
+      //   }
+      //   else {
+      //     (document.documentElement || document.body.parentNode || document.body).scrollTop = offsetTop;
+      //   }
+      // }
     }
   }, {
     key: 'scrollListener',
@@ -113,22 +133,35 @@ var InfiniteScroll = function (_Component) {
       }
 
       if (offset < Number(this.props.threshold)) {
+        console.log('offset bottom detected');
         this.detachScrollListener();
         // Call loadMore after detachScrollListener to allow for non-async loadMore functions
         if (typeof this.props.loadMore === 'function') {
-          this.props.loadMore(this.pageLoaded += 1);
+          console.log('page loaded', this.pageLoaded);
+          this.props.loadMore(this.pageLoaded += 1, this.afterLoad.bind(this));
         }
       } else if (offsetTop < Number(this.props.threshold)) {
         console.log('offset top detected');
-        if (this.pageLoaded > 1) {
-          console.log('page loaded is > 1');
+        if (this.minPageLoaded > 1) {
+          console.log('page loaded is', this.minPageLoaded);
           this.detachScrollListener();
           // Call loadBefore after detachScrollListener to allow for non-async loadBefore functions
           if (typeof this.props.loadBefore === 'function') {
             console.log('load before is function');
-            this.props.loadBefore(this.pageLoaded -= 1);
+            this.props.loadBefore(this.minPageLoaded -= 1, this.afterLoad.bind(this, offsetTop));
           }
+        } else {
+          this.hasMoreBefore = false;
         }
+      }
+
+      if (this.onePageHeight) {
+        this.visiblePage = (offsetTop - this.calculateTopPosition(el)) / this.onePageHeight;
+        console.log('offsetTop', offsetTop);
+        console.log('position scroll element', this.calculateTopPosition(el));
+        console.log('one page height:', this.onePageHeight);
+        console.log('visible page:', this.visiblePage);
+        console.log('rounded: ', Math.round(this.visiblePage) + 1);
       }
     }
   }, {
@@ -148,6 +181,7 @@ var InfiniteScroll = function (_Component) {
           children = _props.children,
           element = _props.element,
           hasMore = _props.hasMore,
+          hasMoreBefore = _props.hasMoreBefore,
           initialLoad = _props.initialLoad,
           isReverse = _props.isReverse,
           loader = _props.loader,
@@ -158,7 +192,7 @@ var InfiniteScroll = function (_Component) {
           threshold = _props.threshold,
           useCapture = _props.useCapture,
           useWindow = _props.useWindow,
-          props = _objectWithoutProperties(_props, ['children', 'element', 'hasMore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'loadBefore', 'pageStart', 'ref', 'threshold', 'useCapture', 'useWindow']);
+          props = _objectWithoutProperties(_props, ['children', 'element', 'hasMore', 'hasMoreBefore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'loadBefore', 'pageStart', 'ref', 'threshold', 'useCapture', 'useWindow']);
 
       props.ref = function (node) {
         _this2.scrollComponent = node;
@@ -175,6 +209,13 @@ var InfiniteScroll = function (_Component) {
           isReverse ? childrenArray.unshift(this.defaultLoader) : childrenArray.push(this.defaultLoader);
         }
       }
+      if (hasMoreBefore) {
+        if (loader) {
+          childrenArray.unshift(loader);
+        } else {
+          childrenArray.unshift(this.defaultLoader);
+        }
+      }
       return _react2.default.createElement.apply(_react2.default, [element, props].concat(childrenArray));
     }
   }]);
@@ -186,6 +227,7 @@ InfiniteScroll.propTypes = {
   children: _propTypes2.default.oneOfType([_propTypes2.default.object, _propTypes2.default.array]).isRequired,
   element: _propTypes2.default.string,
   hasMore: _propTypes2.default.bool,
+  hasMoreBefore: _propTypes2.default.bool,
   initialLoad: _propTypes2.default.bool,
   isReverse: _propTypes2.default.bool,
   loader: _propTypes2.default.object,
@@ -200,6 +242,7 @@ InfiniteScroll.propTypes = {
 InfiniteScroll.defaultProps = {
   element: 'div',
   hasMore: false,
+  hasMoreBefore: false,
   initialLoad: true,
   pageStart: 0,
   ref: null,
