@@ -41,6 +41,10 @@ export default class InfiniteScroll extends Component {
   constructor(props) {
     super(props);
     this.scrollListener = this.scrollListener.bind(this);
+    this.state = {
+      items: [],
+      visiblePage: null
+    }
   }
 
   componentDidMount() {
@@ -49,7 +53,6 @@ export default class InfiniteScroll extends Component {
     // first page is loaded automatically, therefore minPageLoaded is the page number after initial pageLoaded (== pageStart)
     this.minPageLoaded = this.props.pageStart;
     this.onePageHeight = null;
-    this.visiblePage = null;
     this.attachScrollListener();
   }
 
@@ -94,20 +97,51 @@ export default class InfiniteScroll extends Component {
     }
   }
 
-  afterLoadMore() {
-    if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
-      this.onePageHeight = this.scrollComponent.offsetHeight;
-    }
+  getA(items, page) {
+    let anchorElement1 = React.createElement('a', {key: page+'start', href: '#' + page, className: 'page-anchor', 'data-page': page});
+    let anchorElement2 = React.createElement('a', {key: page+'end', href: '#' + page, className: 'page-anchor', 'data-page': page});
+    return [anchorElement1, items, anchorElement2];
   }
 
-  afterLoadBefore() {
-    if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
-      this.onePageHeight = this.scrollComponent.offsetHeight;
+  scrollOnePage() {
+    if (this.onePageHeight === null) {
+      let anchors = document.getElementsByClassName('page-anchor');
+      this.onePageHeight = this.calculateTopPosition(anchors[1]) - this.calculateTopPosition(anchors[0]);
     }
+    window.scrollTo(0, this.getScrollTop() + this.onePageHeight);
+  }
+
+  afterLoadMore(items, page) {
+    this.setState((prevState, props) => {
+      return {
+        items: prevState.items.concat(this.getA(items, page))
+      }
+    });
+  }
+
+  afterLoadBefore(items, page) {
+    this.setState((prevState, props) => {
+      return {
+        items: this.getA(items, page).concat(prevState.items)
+      }
+    });
+    this.scrollOnePage();
+  }
+
+  getScrollTop() {
     const scrollTop = (window.pageYOffset !== undefined) ?
       window.pageYOffset :
       (document.documentElement || document.body.parentNode || document.body).scrollTop;
-    window.scrollTo(0, scrollTop + this.onePageHeight);
+    return scrollTop;
+  }
+
+  getVisiblePage() {
+    let anchors = document.getElementsByClassName('page-anchor');
+    for (let anchor of anchors) {
+      if (this.calculateTopPosition(anchor) > this.getScrollTop()) {
+        return anchor.getAttribute('data-page');
+      }
+    }
   }
 
   scrollListener() {
@@ -117,9 +151,7 @@ export default class InfiniteScroll extends Component {
     let offset;
     let offsetTop;
     if (this.props.useWindow) {
-      const scrollTop = (scrollEl.pageYOffset !== undefined) ?
-        scrollEl.pageYOffset :
-        (document.documentElement || document.body.parentNode || document.body).scrollTop;
+      const scrollTop = this.getScrollTop();
       if (this.props.isReverse) {
         offset = scrollTop;
       } else {
@@ -155,14 +187,9 @@ export default class InfiniteScroll extends Component {
       }
     }
 
-    if (this.onePageHeight) {
-      let visiblePage = ( offsetTop - this.calculateTopPosition(el) ) / this.onePageHeight;
-      visiblePage = Math.round(visiblePage) + this.minPageLoaded;
-      console.log('visible page #', visiblePage);
-      if (this.visiblePage !== visiblePage) {
-        this.visiblePage = visiblePage;
-        this.props.onPageChange(this.visiblePage);
-      }
+    let visiblePage = this.getVisiblePage();
+    if (visiblePage && this.state.visiblePage !== visiblePage) {
+      this.setState({visiblePage: visiblePage}, this.props.onPageChange(visiblePage));
     }
   }
 
@@ -200,7 +227,8 @@ export default class InfiniteScroll extends Component {
       }
     };
 
-    const childrenArray = [children];
+    // const childrenArray = [children];
+    const childrenArray = [this.state.items];
     if (hasMore) {
       if (loader) {
         isReverse ? childrenArray.unshift(loader) : childrenArray.push(loader);

@@ -33,6 +33,10 @@ var InfiniteScroll = function (_Component) {
     var _this = _possibleConstructorReturn(this, (InfiniteScroll.__proto__ || Object.getPrototypeOf(InfiniteScroll)).call(this, props));
 
     _this.scrollListener = _this.scrollListener.bind(_this);
+    _this.state = {
+      items: [],
+      visiblePage: null
+    };
     return _this;
   }
 
@@ -44,7 +48,6 @@ var InfiniteScroll = function (_Component) {
       // first page is loaded automatically, therefore minPageLoaded is the page number after initial pageLoaded (== pageStart)
       this.minPageLoaded = this.props.pageStart;
       this.onePageHeight = null;
-      this.visiblePage = null;
       this.attachScrollListener();
     }
   }, {
@@ -96,20 +99,80 @@ var InfiniteScroll = function (_Component) {
       }
     }
   }, {
-    key: 'afterLoadMore',
-    value: function afterLoadMore() {
-      if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
-        this.onePageHeight = this.scrollComponent.offsetHeight;
+    key: 'getA',
+    value: function getA(items, page) {
+      var anchorElement1 = _react2.default.createElement('a', { key: page + 'start', href: '#' + page, className: 'page-anchor', 'data-page': page });
+      var anchorElement2 = _react2.default.createElement('a', { key: page + 'end', href: '#' + page, className: 'page-anchor', 'data-page': page });
+      return [anchorElement1, items, anchorElement2];
+    }
+  }, {
+    key: 'scrollOnePage',
+    value: function scrollOnePage() {
+      if (this.onePageHeight === null) {
+        var anchors = document.getElementsByClassName('page-anchor');
+        this.onePageHeight = this.calculateTopPosition(anchors[1]) - this.calculateTopPosition(anchors[0]);
       }
+      window.scrollTo(0, this.getScrollTop() + this.onePageHeight);
+    }
+  }, {
+    key: 'afterLoadMore',
+    value: function afterLoadMore(items, page) {
+      var _this2 = this;
+
+      this.setState(function (prevState, props) {
+        return {
+          items: prevState.items.concat(_this2.getA(items, page))
+        };
+      });
     }
   }, {
     key: 'afterLoadBefore',
-    value: function afterLoadBefore() {
-      if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
-        this.onePageHeight = this.scrollComponent.offsetHeight;
-      }
+    value: function afterLoadBefore(items, page) {
+      var _this3 = this;
+
+      this.setState(function (prevState, props) {
+        return {
+          items: _this3.getA(items, page).concat(prevState.items)
+        };
+      });
+      this.scrollOnePage();
+    }
+  }, {
+    key: 'getScrollTop',
+    value: function getScrollTop() {
       var scrollTop = window.pageYOffset !== undefined ? window.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
-      window.scrollTo(0, scrollTop + this.onePageHeight);
+      return scrollTop;
+    }
+  }, {
+    key: 'getVisiblePage',
+    value: function getVisiblePage() {
+      var anchors = document.getElementsByClassName('page-anchor');
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = anchors[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var anchor = _step.value;
+
+          if (this.calculateTopPosition(anchor) > this.getScrollTop()) {
+            return anchor.getAttribute('data-page');
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
     }
   }, {
     key: 'scrollListener',
@@ -120,7 +183,7 @@ var InfiniteScroll = function (_Component) {
       var offset = void 0;
       var offsetTop = void 0;
       if (this.props.useWindow) {
-        var scrollTop = scrollEl.pageYOffset !== undefined ? scrollEl.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
+        var scrollTop = this.getScrollTop();
         if (this.props.isReverse) {
           offset = scrollTop;
         } else {
@@ -151,14 +214,9 @@ var InfiniteScroll = function (_Component) {
         }
       }
 
-      if (this.onePageHeight) {
-        var visiblePage = (offsetTop - this.calculateTopPosition(el)) / this.onePageHeight;
-        visiblePage = Math.round(visiblePage) + this.minPageLoaded;
-        console.log('visible page #', visiblePage);
-        if (this.visiblePage !== visiblePage) {
-          this.visiblePage = visiblePage;
-          this.props.onPageChange(this.visiblePage);
-        }
+      var visiblePage = this.getVisiblePage();
+      if (visiblePage && this.state.visiblePage !== visiblePage) {
+        this.setState({ visiblePage: visiblePage }, this.props.onPageChange(visiblePage));
       }
     }
   }, {
@@ -172,7 +230,7 @@ var InfiniteScroll = function (_Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this2 = this;
+      var _this4 = this;
 
       var _props = this.props,
           children = _props.children,
@@ -193,13 +251,14 @@ var InfiniteScroll = function (_Component) {
           props = _objectWithoutProperties(_props, ['children', 'element', 'hasMore', 'hasMoreBefore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'loadBefore', 'onPageChange', 'pageStart', 'ref', 'threshold', 'useCapture', 'useWindow']);
 
       props.ref = function (node) {
-        _this2.scrollComponent = node;
+        _this4.scrollComponent = node;
         if (ref) {
           ref(node);
         }
       };
 
-      var childrenArray = [children];
+      // const childrenArray = [children];
+      var childrenArray = [this.state.items];
       if (hasMore) {
         if (loader) {
           isReverse ? childrenArray.unshift(loader) : childrenArray.push(loader);
