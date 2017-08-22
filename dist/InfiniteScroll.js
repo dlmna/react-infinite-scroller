@@ -96,15 +96,20 @@ var InfiniteScroll = function (_Component) {
       }
     }
   }, {
-    key: 'afterLoad',
-    value: function afterLoad(isScrollTop) {
+    key: 'afterLoadMore',
+    value: function afterLoadMore() {
       if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
         this.onePageHeight = this.scrollComponent.offsetHeight;
       }
-      if (isScrollTop !== undefined) {
-        var scrollTop = window.pageYOffset !== undefined ? window.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
-        window.scrollTo(0, scrollTop + this.onePageHeight);
+    }
+  }, {
+    key: 'afterLoadBefore',
+    value: function afterLoadBefore() {
+      if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
+        this.onePageHeight = this.scrollComponent.offsetHeight;
       }
+      var scrollTop = window.pageYOffset !== undefined ? window.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
+      window.scrollTo(0, scrollTop + this.onePageHeight);
     }
   }, {
     key: 'scrollListener',
@@ -132,14 +137,14 @@ var InfiniteScroll = function (_Component) {
         this.detachScrollListener();
         // Call loadMore after detachScrollListener to allow for non-async loadMore functions
         if (typeof this.props.loadMore === 'function') {
-          this.props.loadMore(this.pageLoaded += 1, this.afterLoad.bind(this));
+          this.props.loadMore(this.pageLoaded += 1, this.afterLoadMore.bind(this));
         }
       } else if (offsetTop < Number(this.props.threshold)) {
         if (this.minPageLoaded > 1) {
           this.detachScrollListener();
           // Call loadBefore after detachScrollListener to allow for non-async loadBefore functions
           if (typeof this.props.loadBefore === 'function') {
-            this.props.loadBefore(this.minPageLoaded -= 1, this.afterLoad.bind(this, true));
+            this.props.loadBefore(this.minPageLoaded -= 1, this.afterLoadBefore.bind(this));
           }
         } else {
           this.hasMoreBefore = false;
@@ -147,9 +152,13 @@ var InfiniteScroll = function (_Component) {
       }
 
       if (this.onePageHeight) {
-        this.visiblePage = (offsetTop - this.calculateTopPosition(el)) / this.onePageHeight;
-        this.visiblePage = Math.round(this.visiblePage) + this.minPageLoaded;
-        console.log('visible page #', this.visiblePage);
+        var visiblePage = (offsetTop - this.calculateTopPosition(el)) / this.onePageHeight;
+        visiblePage = Math.round(visiblePage) + this.minPageLoaded;
+        console.log('visible page #', visiblePage);
+        if (this.visiblePage !== visiblePage) {
+          this.visiblePage = visiblePage;
+          this.props.onPageChange(this.visiblePage);
+        }
       }
     }
   }, {
@@ -175,12 +184,13 @@ var InfiniteScroll = function (_Component) {
           loader = _props.loader,
           loadMore = _props.loadMore,
           loadBefore = _props.loadBefore,
+          onPageChange = _props.onPageChange,
           pageStart = _props.pageStart,
           ref = _props.ref,
           threshold = _props.threshold,
           useCapture = _props.useCapture,
           useWindow = _props.useWindow,
-          props = _objectWithoutProperties(_props, ['children', 'element', 'hasMore', 'hasMoreBefore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'loadBefore', 'pageStart', 'ref', 'threshold', 'useCapture', 'useWindow']);
+          props = _objectWithoutProperties(_props, ['children', 'element', 'hasMore', 'hasMoreBefore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'loadBefore', 'onPageChange', 'pageStart', 'ref', 'threshold', 'useCapture', 'useWindow']);
 
       props.ref = function (node) {
         _this2.scrollComponent = node;
@@ -221,6 +231,7 @@ InfiniteScroll.propTypes = {
   loader: _propTypes2.default.object,
   loadMore: _propTypes2.default.func.isRequired,
   loadBefore: _propTypes2.default.func.isRequired,
+  onPageChange: _propTypes2.default.func.isRequired,
   pageStart: _propTypes2.default.number,
   ref: _propTypes2.default.func,
   threshold: _propTypes2.default.number,

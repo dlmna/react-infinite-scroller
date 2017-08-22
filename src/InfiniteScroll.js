@@ -16,6 +16,7 @@ export default class InfiniteScroll extends Component {
     loader: PropTypes.object,
     loadMore: PropTypes.func.isRequired,
     loadBefore: PropTypes.func.isRequired,
+    onPageChange: PropTypes.func.isRequired,
     pageStart: PropTypes.number,
     ref: PropTypes.func,
     threshold: PropTypes.number,
@@ -93,16 +94,20 @@ export default class InfiniteScroll extends Component {
     }
   }
 
-  afterLoad(isScrollTop) {
+  afterLoadMore() {
     if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
       this.onePageHeight = this.scrollComponent.offsetHeight;
     }
-    if (isScrollTop !== undefined) {
-      const scrollTop = (window.pageYOffset !== undefined) ?
-        window.pageYOffset :
-        (document.documentElement || document.body.parentNode || document.body).scrollTop;
-      window.scrollTo(0, scrollTop + this.onePageHeight);
+  }
+
+  afterLoadBefore() {
+    if (this.onePageHeight === null && this.pageLoaded === this.props.pageStart) {
+      this.onePageHeight = this.scrollComponent.offsetHeight;
     }
+    const scrollTop = (window.pageYOffset !== undefined) ?
+      window.pageYOffset :
+      (document.documentElement || document.body.parentNode || document.body).scrollTop;
+    window.scrollTo(0, scrollTop + this.onePageHeight);
   }
 
   scrollListener() {
@@ -134,7 +139,7 @@ export default class InfiniteScroll extends Component {
       this.detachScrollListener();
       // Call loadMore after detachScrollListener to allow for non-async loadMore functions
       if (typeof this.props.loadMore === 'function') {
-        this.props.loadMore(this.pageLoaded += 1, this.afterLoad.bind(this));
+        this.props.loadMore(this.pageLoaded += 1, this.afterLoadMore.bind(this));
       }
     }
     else if (offsetTop < Number(this.props.threshold)) {
@@ -142,7 +147,7 @@ export default class InfiniteScroll extends Component {
         this.detachScrollListener();
         // Call loadBefore after detachScrollListener to allow for non-async loadBefore functions
         if (typeof this.props.loadBefore === 'function') {
-          this.props.loadBefore(this.minPageLoaded -= 1, this.afterLoad.bind(this, true));
+          this.props.loadBefore(this.minPageLoaded -= 1, this.afterLoadBefore.bind(this));
         }
       }
       else {
@@ -151,9 +156,13 @@ export default class InfiniteScroll extends Component {
     }
 
     if (this.onePageHeight) {
-      this.visiblePage = ( offsetTop - this.calculateTopPosition(el) ) / this.onePageHeight;
-      this.visiblePage = Math.round(this.visiblePage) + this.minPageLoaded;
-      console.log('visible page #', this.visiblePage);
+      let visiblePage = ( offsetTop - this.calculateTopPosition(el) ) / this.onePageHeight;
+      visiblePage = Math.round(visiblePage) + this.minPageLoaded;
+      console.log('visible page #', visiblePage);
+      if (this.visiblePage !== visiblePage) {
+        this.visiblePage = visiblePage;
+        this.props.onPageChange(this.visiblePage);
+      }
     }
   }
 
@@ -175,6 +184,7 @@ export default class InfiniteScroll extends Component {
       loader,
       loadMore,
       loadBefore,
+      onPageChange,
       pageStart,
       ref,
       threshold,
