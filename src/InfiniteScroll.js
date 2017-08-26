@@ -15,7 +15,6 @@ export default class InfiniteScroll extends Component {
     isReverse: PropTypes.bool,
     loader: PropTypes.object,
     loadMore: PropTypes.func.isRequired,
-    loadBefore: PropTypes.func.isRequired,
     onPageChange: PropTypes.func.isRequired,
     pageStart: PropTypes.number,
     ref: PropTypes.func,
@@ -177,9 +176,9 @@ export default class InfiniteScroll extends Component {
     else if (offsetTop < Number(this.props.threshold)) {
       if (this.minPageLoaded > 1) {
         this.detachScrollListener();
-        // Call loadBefore after detachScrollListener to allow for non-async loadBefore functions
-        if (typeof this.props.loadBefore === 'function') {
-          this.props.loadBefore(this.minPageLoaded -= 1, this.afterLoadBefore.bind(this));
+        // Call loadMore after detachScrollListener to allow for non-async loadMore functions
+        if (typeof this.props.loadMore === 'function') {
+          this.props.loadMore(this.minPageLoaded -= 1, this.afterLoadBefore.bind(this));
         }
       }
       else {
@@ -210,7 +209,6 @@ export default class InfiniteScroll extends Component {
       isReverse,
       loader,
       loadMore,
-      loadBefore,
       onPageChange,
       pageStart,
       ref,

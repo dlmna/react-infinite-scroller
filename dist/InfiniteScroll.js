@@ -205,9 +205,9 @@ var InfiniteScroll = function (_Component) {
       } else if (offsetTop < Number(this.props.threshold)) {
         if (this.minPageLoaded > 1) {
           this.detachScrollListener();
-          // Call loadBefore after detachScrollListener to allow for non-async loadBefore functions
-          if (typeof this.props.loadBefore === 'function') {
-            this.props.loadBefore(this.minPageLoaded -= 1, this.afterLoadBefore.bind(this));
+          // Call loadMore after detachScrollListener to allow for non-async loadMore functions
+          if (typeof this.props.loadMore === 'function') {
+            this.props.loadMore(this.minPageLoaded -= 1, this.afterLoadBefore.bind(this));
           }
         } else {
           this.hasMoreBefore = false;
@@ -241,14 +241,13 @@ var InfiniteScroll = function (_Component) {
           isReverse = _props.isReverse,
           loader = _props.loader,
           loadMore = _props.loadMore,
-          loadBefore = _props.loadBefore,
           onPageChange = _props.onPageChange,
           pageStart = _props.pageStart,
           ref = _props.ref,
           threshold = _props.threshold,
           useCapture = _props.useCapture,
           useWindow = _props.useWindow,
-          props = _objectWithoutProperties(_props, ['children', 'element', 'hasMore', 'hasMoreBefore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'loadBefore', 'onPageChange', 'pageStart', 'ref', 'threshold', 'useCapture', 'useWindow']);
+          props = _objectWithoutProperties(_props, ['children', 'element', 'hasMore', 'hasMoreBefore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'onPageChange', 'pageStart', 'ref', 'threshold', 'useCapture', 'useWindow']);
 
       props.ref = function (node) {
         _this4.scrollComponent = node;
@@ -289,7 +288,6 @@ InfiniteScroll.propTypes = {
   isReverse: _propTypes2.default.bool,
   loader: _propTypes2.default.object,
   loadMore: _propTypes2.default.func.isRequired,
-  loadBefore: _propTypes2.default.func.isRequired,
   onPageChange: _propTypes2.default.func.isRequired,
   pageStart: _propTypes2.default.number,
   ref: _propTypes2.default.func,
