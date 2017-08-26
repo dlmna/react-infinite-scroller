@@ -10,7 +10,6 @@ export default class InfiniteScroll extends Component {
       .isRequired,
     element: PropTypes.string,
     hasMore: PropTypes.bool,
-    hasMoreBefore: PropTypes.bool,
     initialLoad: PropTypes.bool,
     isReverse: PropTypes.bool,
     loader: PropTypes.object,
@@ -18,7 +17,8 @@ export default class InfiniteScroll extends Component {
     onPageChange: PropTypes.func.isRequired,
     pageStart: PropTypes.number,
     ref: PropTypes.func,
-    threshold: PropTypes.number,
+    thresholdTop: PropTypes.number,
+    thresholdBottom: PropTypes.number,
     useCapture: PropTypes.bool,
     useWindow: PropTypes.bool,
   };
@@ -26,11 +26,11 @@ export default class InfiniteScroll extends Component {
   static defaultProps = {
     element: 'div',
     hasMore: false,
-    hasMoreBefore: false,
     initialLoad: true,
     pageStart: 0,
     ref: null,
-    threshold: 250,
+    thresholdTop: 250,
+    thresholdBottom: 250,
     useWindow: true,
     isReverse: false,
     useCapture: false,
@@ -52,10 +52,17 @@ export default class InfiniteScroll extends Component {
     // first page is loaded automatically, therefore minPageLoaded is the page number after initial pageLoaded (== pageStart)
     this.minPageLoaded = this.props.pageStart;
     this.onePageHeight = null;
+    this.isInitialScroll = true;
+    this.lastLoadWasBefore = false;
     this.attachScrollListener();
   }
 
   componentDidUpdate() {
+    if ((this.isInitialScroll || this.lastLoadWasBefore) && this.pageLoaded !== 1 && this.pageLoaded === this.props.pageStart) {
+      window.scrollTo(0,this.props.thresholdTop + 1);
+      this.isInitialScroll = false;
+      this.lastLoadWasBefore = false;
+    }
     this.attachScrollListener();
   }
 
@@ -79,18 +86,12 @@ export default class InfiniteScroll extends Component {
   }
 
   attachScrollListener() {
-    if (!this.props.hasMore && !this.props.hasMoreBefore) {
-      return;
-    }
-
     let scrollEl = window;
     if (this.props.useWindow === false) {
       scrollEl = this.scrollComponent.parentNode;
     }
-
     scrollEl.addEventListener('scroll', this.scrollListener, this.props.useCapture);
     scrollEl.addEventListener('resize', this.scrollListener, this.props.useCapture);
-
     if (this.props.initialLoad) {
       this.scrollListener();
     }
@@ -119,6 +120,7 @@ export default class InfiniteScroll extends Component {
   }
 
   afterLoadBefore(items, page) {
+    this.lastLoadWasBefore = true;
     this.setState((prevState, props) => {
       return {
         items: this.getA(items, page).concat(prevState.items)
@@ -166,23 +168,22 @@ export default class InfiniteScroll extends Component {
       offset = el.scrollHeight - el.parentNode.scrollTop - el.parentNode.clientHeight;
     }
 
-    if (offset < Number(this.props.threshold)) {
-      this.detachScrollListener();
-      // Call loadMore after detachScrollListener to allow for non-async loadMore functions
-      if (typeof this.props.loadMore === 'function') {
-        this.props.loadMore(this.pageLoaded += 1, this.afterLoadMore.bind(this));
+    if (offset < Number(this.props.thresholdBottom)) {
+      if (this.props.hasMore) {
+        this.detachScrollListener();
+        // Call loadMore after detachScrollListener to allow for non-async loadMore functions
+        if (typeof this.props.loadMore === 'function') {
+          this.props.loadMore(this.pageLoaded += 1, this.afterLoadMore.bind(this));
+        }
       }
     }
-    else if (offsetTop < Number(this.props.threshold)) {
+    else if (offsetTop < Number(this.props.thresholdTop)) {
       if (this.minPageLoaded > 1) {
         this.detachScrollListener();
         // Call loadMore after detachScrollListener to allow for non-async loadMore functions
         if (typeof this.props.loadMore === 'function') {
           this.props.loadMore(this.minPageLoaded -= 1, this.afterLoadBefore.bind(this));
         }
-      }
-      else {
-        this.hasMoreBefore = false;
       }
     }
 
@@ -204,7 +205,6 @@ export default class InfiniteScroll extends Component {
       children,
       element,
       hasMore,
-      hasMoreBefore,
       initialLoad,
       isReverse,
       loader,
@@ -212,7 +212,8 @@ export default class InfiniteScroll extends Component {
       onPageChange,
       pageStart,
       ref,
-      threshold,
+      thresholdTop,
+      thresholdBottom,
       useCapture,
       useWindow,
       ...props
@@ -236,7 +237,8 @@ export default class InfiniteScroll extends Component {
           childrenArray.push(this.defaultLoader);
       }
     }
-    if (hasMoreBefore) {
+    // disable loader
+    if (false && this.minPageLoaded > 1) {
       if (loader) {
         childrenArray.unshift(loader);
       }
