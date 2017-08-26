@@ -55,7 +55,6 @@ var InfiniteScroll = function (_Component) {
   }, {
     key: 'componentDidUpdate',
     value: function componentDidUpdate() {
-      console.log('last was before', this.lastLoadWasBefore);
       if ((this.isInitialScroll || this.lastLoadWasBefore) && this.pageLoaded !== 1 && this.pageLoaded === this.props.pageStart) {
         window.scrollTo(0, this.props.thresholdTop + 1);
         this.isInitialScroll = false;
@@ -236,7 +235,6 @@ var InfiniteScroll = function (_Component) {
       var _this4 = this;
 
       var _props = this.props,
-          children = _props.children,
           element = _props.element,
           hasMore = _props.hasMore,
           initialLoad = _props.initialLoad,
@@ -250,7 +248,7 @@ var InfiniteScroll = function (_Component) {
           thresholdBottom = _props.thresholdBottom,
           useCapture = _props.useCapture,
           useWindow = _props.useWindow,
-          props = _objectWithoutProperties(_props, ['children', 'element', 'hasMore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'onPageChange', 'pageStart', 'ref', 'thresholdTop', 'thresholdBottom', 'useCapture', 'useWindow']);
+          props = _objectWithoutProperties(_props, ['element', 'hasMore', 'initialLoad', 'isReverse', 'loader', 'loadMore', 'onPageChange', 'pageStart', 'ref', 'thresholdTop', 'thresholdBottom', 'useCapture', 'useWindow']);
 
       props.ref = function (node) {
         _this4.scrollComponent = node;
@@ -259,7 +257,6 @@ var InfiniteScroll = function (_Component) {
         }
       };
 
-      // const childrenArray = [children];
       var childrenArray = [this.state.items];
       if (hasMore) {
         if (loader) {
@@ -284,7 +281,6 @@ var InfiniteScroll = function (_Component) {
 }(_react.Component);
 
 InfiniteScroll.propTypes = {
-  children: _propTypes2.default.oneOfType([_propTypes2.default.object, _propTypes2.default.array]).isRequired,
   element: _propTypes2.default.string,
   hasMore: _propTypes2.default.bool,
   initialLoad: _propTypes2.default.bool,

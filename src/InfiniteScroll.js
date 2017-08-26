@@ -5,9 +5,6 @@ import PropTypes from 'prop-types';
 
 export default class InfiniteScroll extends Component {
   static propTypes = {
-    children: PropTypes
-      .oneOfType([PropTypes.object, PropTypes.array])
-      .isRequired,
     element: PropTypes.string,
     hasMore: PropTypes.bool,
     initialLoad: PropTypes.bool,
@@ -202,7 +199,6 @@ export default class InfiniteScroll extends Component {
 
   render() {
     const {
-      children,
       element,
       hasMore,
       initialLoad,
@@ -226,7 +222,6 @@ export default class InfiniteScroll extends Component {
       }
     };
 
-    // const childrenArray = [children];
     const childrenArray = [this.state.items];
     if (hasMore) {
       if (loader) {
