@@ -100,6 +100,13 @@ var InfiniteScroll = function (_Component) {
       }
     }
   }, {
+    key: 'reset',
+    value: function reset() {
+      this.pageLoaded = 0;
+      this.props.onPageChange(1);
+      this.setState({ items: [] });
+    }
+  }, {
     key: 'getA',
     value: function getA(items, page) {
       var anchorElement1 = _react2.default.createElement('a', { key: page + 'start', href: '#' + page, className: 'page-anchor', 'data-page': page });

@@ -94,6 +94,12 @@ export default class InfiniteScroll extends Component {
     }
   }
 
+  reset() {
+    this.pageLoaded = 0;
+    this.props.onPageChange(1);
+    this.setState({items: []});
+  }
+
   getA(items, page) {
     let anchorElement1 = React.createElement('a', {key: page+'start', href: '#' + page, className: 'page-anchor', 'data-page': page});
     let anchorElement2 = React.createElement('a', {key: page+'end', href: '#' + page, className: 'page-anchor', 'data-page': page});
