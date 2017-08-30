@@ -10,6 +10,8 @@ export default class InfiniteScroll extends Component {
     initialLoad: PropTypes.bool,
     isReverse: PropTypes.bool,
     loader: PropTypes.object,
+    loadStopper: PropTypes.object,
+    loadPagesBeforeStop: PropTypes.number,
     loadMore: PropTypes.func.isRequired,
     onPageChange: PropTypes.func.isRequired,
     pageStart: PropTypes.number,
@@ -32,6 +34,8 @@ export default class InfiniteScroll extends Component {
     isReverse: false,
     useCapture: false,
     loader: null,
+    loadStopper: 'load more',
+    loadPagesBeforeStop: 3
   };
 
   constructor(props) {
@@ -39,7 +43,11 @@ export default class InfiniteScroll extends Component {
     this.scrollListener = this.scrollListener.bind(this);
     this.state = {
       items: [],
-      visiblePage: null
+      visiblePage: null,
+      loadTopCount: 0,
+      loadBottomCount: 0,
+      stopLoadBottom: false,
+      stopLoadTop: false
     }
   }
 
@@ -96,8 +104,19 @@ export default class InfiniteScroll extends Component {
 
   reset() {
     this.pageLoaded = 0;
+    this.minPageLoaded = 1;
     this.props.onPageChange(1);
-    this.setState({items: []});
+    this.isInitialScroll = false;
+    this.lastLoadWasBefore = false;
+    this.setState(
+      {
+        items: [],
+        loadTopCount: 0,
+        loadBottomCount: 0,
+        stopLoadBottom: false,
+        stopLoadTop: false
+      }
+    );
   }
 
   getA(items, page) {
@@ -117,7 +136,9 @@ export default class InfiniteScroll extends Component {
   afterLoadMore(items, page) {
     this.setState((prevState, props) => {
       return {
-        items: prevState.items.concat(this.getA(items, page))
+        items: prevState.items.concat(this.getA(items, page)),
+        loadBottomCount: prevState.loadBottomCount + 1,
+        stopLoadBottom: prevState.loadBottomCount > (props.loadPagesBeforeStop-1) ? true : false
       }
     });
   }
@@ -126,7 +147,9 @@ export default class InfiniteScroll extends Component {
     this.lastLoadWasBefore = true;
     this.setState((prevState, props) => {
       return {
-        items: this.getA(items, page).concat(prevState.items)
+        items: this.getA(items, page).concat(prevState.items),
+        loadTopCount: prevState.loadTopCount + 1,
+        stopLoadTop: prevState.loadTopCount > (props.loadPagesBeforeStop-2) ? true : false
       }
     });
     this.scrollOnePage();
@@ -137,6 +160,20 @@ export default class InfiniteScroll extends Component {
       window.pageYOffset :
       (document.documentElement || document.body.parentNode || document.body).scrollTop;
     return scrollTop;
+  }
+
+  enableLoadMoreTop() {
+    this.setState({
+      stopLoadTop: false,
+      loadTopCount: 0
+    });
+  }
+
+  enableLoadMoreBottom() {
+    this.setState({
+      stopLoadBottom: false,
+      loadBottomCount: 0
+    })
   }
 
   getVisiblePage() {
@@ -172,7 +209,7 @@ export default class InfiniteScroll extends Component {
     }
 
     if (offset < Number(this.props.thresholdBottom)) {
-      if (this.props.hasMore) {
+      if (this.props.hasMore && !this.state.stopLoadBottom) {
         this.detachScrollListener();
         // Call loadMore after detachScrollListener to allow for non-async loadMore functions
         if (typeof this.props.loadMore === 'function') {
@@ -180,7 +217,7 @@ export default class InfiniteScroll extends Component {
         }
       }
     }
-    else if (offsetTop < Number(this.props.thresholdTop)) {
+    else if (offsetTop < Number(this.props.thresholdTop) && !this.state.stopLoadTop) {
       if (this.minPageLoaded > 1) {
         this.detachScrollListener();
         // Call loadMore after detachScrollListener to allow for non-async loadMore functions
@@ -210,7 +247,9 @@ export default class InfiniteScroll extends Component {
       initialLoad,
       isReverse,
       loader,
+      loadStopper,
       loadMore,
+      loadPagesBeforeStop,
       onPageChange,
       pageStart,
       ref,
@@ -229,7 +268,27 @@ export default class InfiniteScroll extends Component {
     };
 
     const childrenArray = [this.state.items];
-    if (hasMore) {
+
+
+    if (this.state.stopLoadTop) {
+      childrenArray.unshift(React.createElement('a',
+        {
+          onClick: this.enableLoadMoreTop.bind(this),
+          className: 'loader-link top'
+        },
+        this.props.loadStopper))
+    }
+
+    if (this.state.stopLoadBottom) {
+      childrenArray.push(React.createElement('a',
+        {
+          onClick: this.enableLoadMoreBottom.bind(this),
+          className: 'loader-link bottom'
+        },
+        this.props.loadStopper))
+    }
+
+    if (hasMore && !this.state.stopLoadBottom) {
       if (loader) {
         isReverse ? childrenArray.unshift(loader) : childrenArray.push(loader);
       } else if (this.defaultLoader) {
@@ -239,7 +298,7 @@ export default class InfiniteScroll extends Component {
       }
     }
     // disable loader
-    if (false && this.minPageLoaded > 1) {
+    if (false && this.minPageLoaded > 1 && !this.state.stopLoadTop) {
       if (loader) {
         childrenArray.unshift(loader);
       }
