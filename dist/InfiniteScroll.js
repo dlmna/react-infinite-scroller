@@ -304,13 +304,10 @@ var InfiniteScroll = function (_Component) {
       };
 
       var childrenArray = this.state.items.slice(0);
-      console.log(childrenArray);
 
       if (this.props.pageSize) {
         var startRenderIndex = Math.max(0, (this.state.visiblePage - this.minPageLoaded - this.props.renderPagesCount) * (this.props.pageSize + 2));
         var endRenderIndex = Math.max(this.props.pageSize + 2, (this.state.visiblePage - this.minPageLoaded + 1 + this.props.renderPagesCount) * (this.props.pageSize + 2));
-        console.log(startRenderIndex);
-        console.log(endRenderIndex);
         childrenArray = childrenArray.slice(startRenderIndex, endRenderIndex);
       }
 
