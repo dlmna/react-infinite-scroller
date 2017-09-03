@@ -18,6 +18,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -60,7 +62,6 @@ var InfiniteScroll = function (_Component) {
     key: 'componentDidUpdate',
     value: function componentDidUpdate() {
       if ((this.isInitialScroll || this.lastLoadWasBefore) && this.pageLoaded !== 1 && this.pageLoaded === this.props.pageStart) {
-        console.log('component did update');
         window.scrollTo(0, this.props.thresholdTop + 1);
         this.isInitialScroll = false;
         this.lastLoadWasBefore = false;
@@ -125,7 +126,7 @@ var InfiniteScroll = function (_Component) {
     value: function getA(items, page) {
       var anchorElement1 = _react2.default.createElement('a', { key: page + 'start', href: '#' + page, className: 'page-anchor', 'data-page': page });
       var anchorElement2 = _react2.default.createElement('a', { key: page + 'end', href: '#' + page, className: 'page-anchor', 'data-page': page });
-      return [anchorElement1, items, anchorElement2];
+      return [anchorElement1].concat(_toConsumableArray(items), [anchorElement2]);
     }
   }, {
     key: 'scrollOnePage',
@@ -199,7 +200,7 @@ var InfiniteScroll = function (_Component) {
           var anchor = _step.value;
 
           if (this.calculateTopPosition(anchor) > this.getScrollTop()) {
-            return anchor.getAttribute('data-page');
+            return parseInt(anchor.getAttribute('data-page'));
           }
         }
       } catch (err) {
@@ -286,12 +287,14 @@ var InfiniteScroll = function (_Component) {
           loadPagesBeforeStop = _props.loadPagesBeforeStop,
           onPageChange = _props.onPageChange,
           pageStart = _props.pageStart,
+          pageSize = _props.pageSize,
+          renderPagesCount = _props.renderPagesCount,
           ref = _props.ref,
           thresholdTop = _props.thresholdTop,
           thresholdBottom = _props.thresholdBottom,
           useCapture = _props.useCapture,
           useWindow = _props.useWindow,
-          props = _objectWithoutProperties(_props, ['element', 'hasMore', 'initialLoad', 'isReverse', 'loader', 'loadStopper', 'loadMore', 'loadPagesBeforeStop', 'onPageChange', 'pageStart', 'ref', 'thresholdTop', 'thresholdBottom', 'useCapture', 'useWindow']);
+          props = _objectWithoutProperties(_props, ['element', 'hasMore', 'initialLoad', 'isReverse', 'loader', 'loadStopper', 'loadMore', 'loadPagesBeforeStop', 'onPageChange', 'pageStart', 'pageSize', 'renderPagesCount', 'ref', 'thresholdTop', 'thresholdBottom', 'useCapture', 'useWindow']);
 
       props.ref = function (node) {
         _this4.scrollComponent = node;
@@ -300,7 +303,16 @@ var InfiniteScroll = function (_Component) {
         }
       };
 
-      var childrenArray = [this.state.items];
+      var childrenArray = this.state.items.slice(0);
+      console.log(childrenArray);
+
+      if (this.props.pageSize) {
+        var startRenderIndex = Math.max(0, (this.state.visiblePage - this.minPageLoaded - this.props.renderPagesCount) * (this.props.pageSize + 2));
+        var endRenderIndex = Math.max(this.props.pageSize + 2, (this.state.visiblePage - this.minPageLoaded + 1 + this.props.renderPagesCount) * (this.props.pageSize + 2));
+        console.log(startRenderIndex);
+        console.log(endRenderIndex);
+        childrenArray = childrenArray.slice(startRenderIndex, endRenderIndex);
+      }
 
       if (this.state.stopLoadTop) {
         childrenArray.unshift(_react2.default.createElement('a', {
@@ -331,7 +343,7 @@ var InfiniteScroll = function (_Component) {
           childrenArray.unshift(this.defaultLoader);
         }
       }
-      return _react2.default.createElement.apply(_react2.default, [element, props].concat(childrenArray));
+      return _react2.default.createElement.apply(_react2.default, [element, props].concat(_toConsumableArray(childrenArray)));
     }
   }]);
 
@@ -349,6 +361,8 @@ InfiniteScroll.propTypes = {
   loadMore: _propTypes2.default.func.isRequired,
   onPageChange: _propTypes2.default.func.isRequired,
   pageStart: _propTypes2.default.number,
+  pageSize: _propTypes2.default.number,
+  renderPagesCount: _propTypes2.default.number,
   ref: _propTypes2.default.func,
   thresholdTop: _propTypes2.default.number,
   thresholdBottom: _propTypes2.default.number,
@@ -360,6 +374,8 @@ InfiniteScroll.defaultProps = {
   hasMore: false,
   initialLoad: true,
   pageStart: 0,
+  pageSize: null,
+  renderPagesCount: 2,
   ref: null,
   thresholdTop: 250,
   thresholdBottom: 250,

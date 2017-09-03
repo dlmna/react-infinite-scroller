@@ -15,11 +15,13 @@ export default class InfiniteScroll extends Component {
     loadMore: PropTypes.func.isRequired,
     onPageChange: PropTypes.func.isRequired,
     pageStart: PropTypes.number,
+    pageSize: PropTypes.number,
+    renderPagesCount: PropTypes.number,
     ref: PropTypes.func,
     thresholdTop: PropTypes.number,
     thresholdBottom: PropTypes.number,
     useCapture: PropTypes.bool,
-    useWindow: PropTypes.bool,
+    useWindow: PropTypes.bool
   };
 
   static defaultProps = {
@@ -27,6 +29,8 @@ export default class InfiniteScroll extends Component {
     hasMore: false,
     initialLoad: true,
     pageStart: 0,
+    pageSize: null,
+    renderPagesCount: 2,
     ref: null,
     thresholdTop: 250,
     thresholdBottom: 250,
@@ -122,7 +126,7 @@ export default class InfiniteScroll extends Component {
   getA(items, page) {
     let anchorElement1 = React.createElement('a', {key: page+'start', href: '#' + page, className: 'page-anchor', 'data-page': page});
     let anchorElement2 = React.createElement('a', {key: page+'end', href: '#' + page, className: 'page-anchor', 'data-page': page});
-    return [anchorElement1, items, anchorElement2];
+    return [anchorElement1, ...items, anchorElement2];
   }
 
   scrollOnePage() {
@@ -180,7 +184,7 @@ export default class InfiniteScroll extends Component {
     let anchors = document.getElementsByClassName('page-anchor');
     for (let anchor of anchors) {
       if (this.calculateTopPosition(anchor) > this.getScrollTop()) {
-        return anchor.getAttribute('data-page');
+        return parseInt(anchor.getAttribute('data-page'));
       }
     }
   }
@@ -252,6 +256,8 @@ export default class InfiniteScroll extends Component {
       loadPagesBeforeStop,
       onPageChange,
       pageStart,
+      pageSize,
+      renderPagesCount,
       ref,
       thresholdTop,
       thresholdBottom,
@@ -267,8 +273,13 @@ export default class InfiniteScroll extends Component {
       }
     };
 
-    const childrenArray = [this.state.items];
+    let childrenArray = this.state.items.slice(0);
 
+    if (this.props.pageSize) {
+      const startRenderIndex = Math.max(0, ((this.state.visiblePage - this.minPageLoaded) - this.props.renderPagesCount) * (this.props.pageSize + 2));
+      const endRenderIndex = Math.max(this.props.pageSize + 2, ((this.state.visiblePage - this.minPageLoaded + 1) + this.props.renderPagesCount) * (this.props.pageSize + 2));
+      childrenArray = childrenArray.slice(startRenderIndex, endRenderIndex);
+    }
 
     if (this.state.stopLoadTop) {
       childrenArray.unshift(React.createElement('a',
