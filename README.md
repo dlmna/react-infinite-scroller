@@ -46,10 +46,14 @@ import InfiniteScroll from 'react-infinite-scroller';
         let self = this;
         Api.getData(page)
             .then(function(json) {
+                if (json.next === null) {
+                   self.setState({hasMore:false});
+                }
                 let result = [];
                 json.results.map(function(data, index){ result.push( <SampleComponent key={page+'-'+index} {...data} /> )} );
                 cb(result, page);
             }).catch(function(ex) {
+                self.setState({hasMore:false});
                 console.log(ex);
             });
     }

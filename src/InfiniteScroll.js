@@ -281,7 +281,7 @@ export default class InfiniteScroll extends Component {
       childrenArray = childrenArray.slice(startRenderIndex, endRenderIndex);
     }
 
-    if (this.state.stopLoadTop) {
+    if (this.state.visiblePage > 1 && this.state.stopLoadTop) {
       childrenArray.unshift(React.createElement('a',
         {
           onClick: this.enableLoadMoreTop.bind(this),
@@ -290,7 +290,7 @@ export default class InfiniteScroll extends Component {
         this.props.loadStopper))
     }
 
-    if (this.state.stopLoadBottom) {
+    if (hasMore && this.state.stopLoadBottom) {
       childrenArray.push(React.createElement('a',
         {
           onClick: this.enableLoadMoreBottom.bind(this),

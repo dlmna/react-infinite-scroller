@@ -311,14 +311,14 @@ var InfiniteScroll = function (_Component) {
         childrenArray = childrenArray.slice(startRenderIndex, endRenderIndex);
       }
 
-      if (this.state.stopLoadTop) {
+      if (this.state.visiblePage > 1 && this.state.stopLoadTop) {
         childrenArray.unshift(_react2.default.createElement('a', {
           onClick: this.enableLoadMoreTop.bind(this),
           className: 'loader-link top'
         }, this.props.loadStopper));
       }
 
-      if (this.state.stopLoadBottom) {
+      if (hasMore && this.state.stopLoadBottom) {
         childrenArray.push(_react2.default.createElement('a', {
           onClick: this.enableLoadMoreBottom.bind(this),
           className: 'loader-link bottom'
