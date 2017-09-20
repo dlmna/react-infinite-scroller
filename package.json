@@ -1,6 +1,6 @@
 {
   "name": "react-infinite-scroller",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "Infinite scroll component for React in ES6",
   "main": "index.js",
   "jsnext:main": "src/InfiniteScroll.js",
@@ -26,8 +26,7 @@
     "url": "https://github.com/dlmna/react-infinite-scroller"
   },
   "dependencies": {
-    "prop-types": "^15.5.8",
-    "underscore": "^1.8.3"
+    "prop-types": "^15.5.8"
   },
   "peerDependencies": {
     "react": "^0.14.9 || ^15.3.0"

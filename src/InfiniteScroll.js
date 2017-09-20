@@ -44,7 +44,7 @@ export default class InfiniteScroll extends Component {
 
   constructor(props) {
     super(props);
-    this.scrollListener = this.throttledScrollListener.bind(this);
+    this.scrollListener = this.scrollListener.bind(this);
     this.state = {
       items: [],
       visiblePage: null,
@@ -188,10 +188,6 @@ export default class InfiniteScroll extends Component {
         return parseInt(anchor.getAttribute('data-page'));
       }
     }
-  }
-
-  throttledScrollListener() {
-    return _.throttle(this.scrollListener, 1000);
   }
 
   scrollListener() {
