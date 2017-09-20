@@ -34,7 +34,7 @@ var InfiniteScroll = function (_Component) {
 
     var _this = _possibleConstructorReturn(this, (InfiniteScroll.__proto__ || Object.getPrototypeOf(InfiniteScroll)).call(this, props));
 
-    _this.scrollListener = _this.scrollListener.bind(_this);
+    _this.scrollListener = _this.throttledScrollListener.bind(_this);
     _this.state = {
       items: [],
       visiblePage: null,
@@ -218,6 +218,11 @@ var InfiniteScroll = function (_Component) {
           }
         }
       }
+    }
+  }, {
+    key: 'throttledScrollListener',
+    value: function throttledScrollListener() {
+      return _.throttle(this.scrollListener, 1000);
     }
   }, {
     key: 'scrollListener',
