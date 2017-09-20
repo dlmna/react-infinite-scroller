@@ -182,6 +182,7 @@ var InfiniteScroll = function (_Component) {
   }, {
     key: 'enableLoadMoreBottom',
     value: function enableLoadMoreBottom() {
+      window.scrollBy(0, -1 * this.props.thresholdBottom);
       this.setState({
         stopLoadBottom: false,
         loadBottomCount: 0

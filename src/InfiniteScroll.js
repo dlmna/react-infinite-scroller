@@ -174,10 +174,11 @@ export default class InfiniteScroll extends Component {
   }
 
   enableLoadMoreBottom() {
+    window.scrollBy(0, -1 * this.props.thresholdBottom);
     this.setState({
       stopLoadBottom: false,
       loadBottomCount: 0
-    })
+    });
   }
 
   getVisiblePage() {
