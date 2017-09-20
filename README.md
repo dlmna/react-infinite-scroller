@@ -1,16 +1,7 @@
 React Infinite Scroller
 =======================
 
-[![Travis](https://img.shields.io/travis/CassetteRocks/react-infinite-scroller.svg?style=flat-square)](https://travis-ci.org/CassetteRocks/react-infinite-scroller)
-[![npm](https://img.shields.io/npm/dt/react-infinite-scroller.svg?style=flat-square)](https://www.npmjs.com/package/react-infinite-scroller)
-[![React Version](https://img.shields.io/badge/React-%5E0.14.9%20%7C%7C%20%5E15.3.0-blue.svg?style=flat-square)](https://www.npmjs.com/package/react)
-[![npm](https://img.shields.io/npm/v/react-infinite-scroller.svg?style=flat-square)](https://www.npmjs.com/package/react-infinite-scroller)
-[![npm](https://img.shields.io/npm/l/react-infinite-scroller.svg?style=flat-square)](https://github.com/CassetteRocks/react-infinite-scroller/blob/master/LICENSE)
-
 Infinitely load content using a React Component. This fork maintains a simple, lightweight infinite scroll package that supports both `window` and scrollable elements.
-
-- [Demo](https://cassetterocks.github.io/react-infinite-scroller/demo/)
-- [Demo Source](https://github.com/CassetteRocks/react-infinite-scroller/blob/master/docs/src/index.js)
 
 ## Installation
 
@@ -30,42 +21,63 @@ import InfiniteScroll from 'react-infinite-scroller';
 ### Window scroll events
 
 ```js
+
 <InfiniteScroll
-    pageStart={0}
-    loadMore={loadFunc}
-    hasMore={true || false}
-    loader={<div className="loader">Loading ...</div>}
->
-    {items} // <-- This is the content you want to load
-</InfiniteScroll>
+    pageStart={ 1 }
+    loadMore={ this.loadData.bind(this) }
+    hasMore={ true|false }
+    onPageChange={ this.onPageChange.bind(this) }
+    thresholdTop={ 250 }
+    thresholdBottom={ 250 }
+    loader={ <div className="loader">Loading ...</div> }
+    loadStopper={ <div className="load-stopper">Click here to load more</div> }
+    loadPagesBeforeStop={ 3 }
+    renderPagesCount={ 3 }
+    pageSize={ this.state.pageSize }
+    ref={ (scroll) => { this.scroll = scroll; } }
+/>
+
+
 ```
 
-### DOM scroll events
+### Sample Handlers
+```js
+    loadData(page, cb) {
+        let self = this;
+        Api.getData(page)
+            .then(function(json) {
+                let result = [];
+                json.results.map(function(data, index){ result.push( <SampleComponent key={page+'-'+index} {...data} /> )} );
+                cb(result, page);
+            }).catch(function(ex) {
+                console.log(ex);
+            });
+    }
 
-```html
-<div style="height:700px;overflow:auto;">
-    <InfiniteScroll
-        pageStart={0}
-        loadMore={loadFunc}
-        hasMore={true || false}
-        loader={<div className="loader">Loading ...</div>}
-        useWindow={false}
-    >
-        {items}
-    </InfiniteScroll>
-</div>
+    onPageChange(page) {
+        // handle page change
+        ...
+    }
+
+    resetScroll() {
+        // clear all pages
+        // causes reloading at page 1
+        this.scroll.reset();
+    }
 ```
 
 ## Props
 
 | Name             | Type          | Default    | Description|
 |:----             |:----          |:----       |:----|
-| `element`        | `String`      | `'div'`    | Name of the element that the component should render as.|
-| `hasMore`        | `Boolean`     | `false`    | Whether there are more items to be loaded. Event listeners are removed if `false`.|
-| `initialLoad`    | `Boolean`     | `true`     | Whether the component should load the first set of items.|
-| `isReverse`      | `Boolean`     | `false`    | Whether new items should be loaded when user scrolls to the top of the scrollable area.|
-| `loadMore`       | `Function`    |            | A callback when more items are requested by the user.|
-| `pageStart`      | `Number`      | `0`        | The number of the first page to load, With the default of `0`, the first page is `1`.|
-| `threshold`      | `Number`     | `250`      | The distance in pixels before the end of the items that will trigger a call to `loadMore`.|
-| `useCapture`     | `Boolean`     | `false`     | Proxy to the `useCapture` option of the added event listeners.|
-| `useWindow`      | `Boolean`     | `true`     | Add scroll listeners to the window, or else, the component's `parentNode`.|
+| `pageStart`      | `Number`      | `1`        | Initial page. |
+| `loadMore`       | `func`        |            | Callback to load fresh pages |
+| `hasMore`        | `Boolean`     | `false`    | Indicates if it is to load more at the end of the list |
+| `onPageChange`   | `func`        |            | Callback to handle page change |
+| `thresholdTop`   | `Number`      | `250`      | Threshold before loading more data at top |
+| `thresholdBottom`| `Number`      | `250`      | Threshold before loading more data at bottom |
+| `loader`         | `'div'`       | `null`     | The Element shown while loading |
+| `loadStopper`    | `'div'`       |`'load more'`| The element shown when loadPagesBeforeStop is exceeded |
+|`renderPagesCount`| `Number`      | `2`        | Number of pages that should be rendered before and after current page |
+| `pageSize`       | `Number`      | `null`     | Number of elements per page. *Required for rendering pages according to renderPagesCount.* |
+| `ref`            | `func`        | `null`     | Callback to get reference to scroll component |
