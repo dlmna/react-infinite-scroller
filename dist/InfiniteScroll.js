@@ -370,7 +370,7 @@ InfiniteScroll.defaultProps = {
   element: 'div',
   hasMore: false,
   initialLoad: true,
-  pageStart: 0,
+  pageStart: 1,
   pageSize: null,
   renderPagesCount: 2,
   ref: null,

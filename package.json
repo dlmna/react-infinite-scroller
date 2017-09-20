@@ -1,6 +1,6 @@
 {
   "name": "react-infinite-scroller",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "Infinite scroll component for React in ES6",
   "main": "index.js",
   "jsnext:main": "src/InfiniteScroll.js",
@@ -23,7 +23,7 @@
   "author": "CassetteRocks",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/CassetteRocks/react-infinite-scroller/issues"
+    "url": "https://github.com/dlmna/react-infinite-scroller"
   },
   "dependencies": {
     "prop-types": "^15.5.8"
