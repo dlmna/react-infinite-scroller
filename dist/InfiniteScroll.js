@@ -38,7 +38,7 @@ var InfiniteScroll = function (_Component) {
 
     var _this = _possibleConstructorReturn(this, (InfiniteScroll.__proto__ || Object.getPrototypeOf(InfiniteScroll)).call(this, props));
 
-    _this.scrollListener = _lodash2.default.throttle(_this.scrollListener.bind(_this), 2000);
+    _this.scrollListener = _lodash2.default.throttle(_this.scrollListener.bind(_this), 500);
     _this.state = {
       items: [],
       visiblePage: null,

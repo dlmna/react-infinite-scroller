@@ -45,7 +45,7 @@ export default class InfiniteScroll extends Component {
 
   constructor(props) {
     super(props);
-    this.scrollListener = _.throttle(this.scrollListener.bind(this), 2000);
+    this.scrollListener = _.throttle(this.scrollListener.bind(this), 500);
     this.state = {
       items: [],
       visiblePage: null,
