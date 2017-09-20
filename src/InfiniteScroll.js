@@ -2,6 +2,7 @@ import React, {
   Component,
 } from 'react';
 import PropTypes from 'prop-types';
+import _ from 'lodash';
 
 export default class InfiniteScroll extends Component {
   static propTypes = {
@@ -44,7 +45,7 @@ export default class InfiniteScroll extends Component {
 
   constructor(props) {
     super(props);
-    this.scrollListener = this.scrollListener.bind(this);
+    this.scrollListener = _.throttle(this.scrollListener.bind(this), 2000);
     this.state = {
       items: [],
       visiblePage: null,

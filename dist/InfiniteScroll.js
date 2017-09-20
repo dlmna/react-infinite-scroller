@@ -14,6 +14,10 @@ var _propTypes = require('prop-types');
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
@@ -34,7 +38,7 @@ var InfiniteScroll = function (_Component) {
 
     var _this = _possibleConstructorReturn(this, (InfiniteScroll.__proto__ || Object.getPrototypeOf(InfiniteScroll)).call(this, props));
 
-    _this.scrollListener = _this.scrollListener.bind(_this);
+    _this.scrollListener = _lodash2.default.throttle(_this.scrollListener.bind(_this), 2000);
     _this.state = {
       items: [],
       visiblePage: null,
