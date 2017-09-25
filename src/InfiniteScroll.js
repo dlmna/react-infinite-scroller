@@ -22,7 +22,8 @@ export default class InfiniteScroll extends Component {
     thresholdTop: PropTypes.number,
     thresholdBottom: PropTypes.number,
     useCapture: PropTypes.bool,
-    useWindow: PropTypes.bool
+    useWindow: PropTypes.bool,
+    scrollOffsetSubpage: PropTypes.number
   };
 
   static defaultProps = {
@@ -40,7 +41,8 @@ export default class InfiniteScroll extends Component {
     useCapture: false,
     loader: null,
     loadStopper: 'load more',
-    loadPagesBeforeStop: 3
+    loadPagesBeforeStop: 3,
+    scrollOffsetSubpage: 0
   };
 
   constructor(props) {
@@ -68,9 +70,12 @@ export default class InfiniteScroll extends Component {
   }
 
   componentDidUpdate() {
-    if ((this.isInitialScroll || this.lastLoadWasBefore) && this.pageLoaded !== 1 && this.pageLoaded === this.props.pageStart) {
-      window.scrollTo(0,this.props.thresholdTop + 1);
+    if (this.isInitialScroll && this.pageLoaded !== 1 && this.pageLoaded === this.props.pageStart) {
+      window.scrollTo(0, Math.max(this.props.thresholdTop + 1, this.props.scrollOffsetSubpage));
       this.isInitialScroll = false;
+    }
+    else if (this.lastLoadWasBefore && this.pageLoaded !== 1 && this.pageLoaded === this.props.pageStart) {
+      window.scrollTo(0, this.props.thresholdTop + 1);
       this.lastLoadWasBefore = false;
     }
     this.attachScrollListener();
@@ -265,6 +270,7 @@ export default class InfiniteScroll extends Component {
       thresholdBottom,
       useCapture,
       useWindow,
+      scrollOffsetSubpage,
       ...props
     } = this.props;
 

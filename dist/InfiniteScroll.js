@@ -65,9 +65,11 @@ var InfiniteScroll = function (_Component) {
   }, {
     key: 'componentDidUpdate',
     value: function componentDidUpdate() {
-      if ((this.isInitialScroll || this.lastLoadWasBefore) && this.pageLoaded !== 1 && this.pageLoaded === this.props.pageStart) {
-        window.scrollTo(0, this.props.thresholdTop + 1);
+      if (this.isInitialScroll && this.pageLoaded !== 1 && this.pageLoaded === this.props.pageStart) {
+        window.scrollTo(0, Math.max(this.props.thresholdTop + 1, this.props.scrollOffsetSubpage));
         this.isInitialScroll = false;
+      } else if (this.lastLoadWasBefore && this.pageLoaded !== 1 && this.pageLoaded === this.props.pageStart) {
+        window.scrollTo(0, this.props.thresholdTop + 1);
         this.lastLoadWasBefore = false;
       }
       this.attachScrollListener();
@@ -299,7 +301,8 @@ var InfiniteScroll = function (_Component) {
           thresholdBottom = _props.thresholdBottom,
           useCapture = _props.useCapture,
           useWindow = _props.useWindow,
-          props = _objectWithoutProperties(_props, ['element', 'hasMore', 'initialLoad', 'isReverse', 'loader', 'loadStopper', 'loadMore', 'loadPagesBeforeStop', 'onPageChange', 'pageStart', 'pageSize', 'renderPagesCount', 'ref', 'thresholdTop', 'thresholdBottom', 'useCapture', 'useWindow']);
+          scrollOffsetSubpage = _props.scrollOffsetSubpage,
+          props = _objectWithoutProperties(_props, ['element', 'hasMore', 'initialLoad', 'isReverse', 'loader', 'loadStopper', 'loadMore', 'loadPagesBeforeStop', 'onPageChange', 'pageStart', 'pageSize', 'renderPagesCount', 'ref', 'thresholdTop', 'thresholdBottom', 'useCapture', 'useWindow', 'scrollOffsetSubpage']);
 
       props.ref = function (node) {
         _this4.scrollComponent = node;
@@ -369,7 +372,8 @@ InfiniteScroll.propTypes = {
   thresholdTop: _propTypes2.default.number,
   thresholdBottom: _propTypes2.default.number,
   useCapture: _propTypes2.default.bool,
-  useWindow: _propTypes2.default.bool
+  useWindow: _propTypes2.default.bool,
+  scrollOffsetSubpage: _propTypes2.default.number
 };
 InfiniteScroll.defaultProps = {
   element: 'div',
@@ -386,7 +390,8 @@ InfiniteScroll.defaultProps = {
   useCapture: false,
   loader: null,
   loadStopper: 'load more',
-  loadPagesBeforeStop: 3
+  loadPagesBeforeStop: 3,
+  scrollOffsetSubpage: 0
 };
 exports.default = InfiniteScroll;
 module.exports = exports['default'];

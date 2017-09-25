@@ -85,3 +85,4 @@ import InfiniteScroll from 'react-infinite-scroller';
 |`renderPagesCount`| `Number`      | `2`        | Number of pages that should be rendered before and after current page |
 | `pageSize`       | `Number`      | `null`     | Number of elements per page. *Required for rendering pages according to renderPagesCount.* |
 | `ref`            | `func`        | `null`     | Callback to get reference to scroll component |
+| `scrollOffsetSubpage`| `Number`  | `0`     | Offset for initial scrolling on subpages (?page=X) |
